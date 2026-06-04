@@ -1,0 +1,18 @@
+{
+  "name": "seo-image-processor",
+  "version": "1.0.0",
+  "description": "Leather Showroom SEO Image Processor — secure team-hosted version. AI naming runs through a backend so the Anthropic API key is never exposed to the browser.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "express": "^4.19.2"
+  }
+}
