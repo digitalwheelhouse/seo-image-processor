@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Digital Wheelhouse — SEO Image Processor</title>
+<title>Digital Wheelhouse — SEO Image Processor · Leather Showroom</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -59,10 +59,16 @@
   .brand-icon {
     width: 38px; height: 38px;
     border-radius: 9px;
-    background: var(--neon-matrix);
+    background: var(--midnight);
+    border: 1px solid rgba(0,224,255,0.22);
+    display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 0 24px rgba(0,224,255,0.25);
+    box-shadow: 0 0 20px rgba(0,224,255,0.18);
+    overflow: hidden;
   }
+  .brand-icon img { width: 58%; height: 58%; display: block; }
+  .brand-logo { height: 42px; width: auto; display: block; }
+  .brand-divider { width: 1px; height: 30px; background: rgba(255,255,255,0.15); display: block; }
   h1 {
     font-family: var(--font-display);
     font-size: 24px;
@@ -387,6 +393,70 @@
   }
   .footer-note strong { color: var(--teal); font-weight: 500; }
 
+  .check-row {
+    display: flex; align-items: center; gap: 9px;
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.04em; text-transform: none;
+    color: var(--mid-gray); margin: 16px 0 4px; cursor: pointer;
+  }
+  .check-row input { width: auto; accent-color: var(--teal); cursor: pointer; }
+
+  /* ===== Why-this-matters explainer ===== */
+  .explainer {
+    background: linear-gradient(135deg, var(--charcoal) 0%, rgba(0,224,255,0.05) 100%);
+    border: 1px solid rgba(0,224,255,0.12);
+    border-radius: 16px;
+    padding: 22px 26px;
+    margin-bottom: 28px;
+  }
+  .explainer-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--neon-cyan);
+    margin-bottom: 14px;
+  }
+  .explainer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 26px;
+  }
+  @media (max-width: 980px) { .explainer-grid { grid-template-columns: 1fr; } }
+  .explainer-grid h3 {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--white);
+    margin: 0 0 6px;
+  }
+  .explainer-grid p {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--mid-gray);
+    line-height: 1.65;
+    margin: 0;
+  }
+  .explainer code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--teal-light);
+    background: var(--midnight);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .explainer-foot {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--dark-gray);
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    letter-spacing: 0.03em;
+    line-height: 1.6;
+  }
+  .explainer-foot strong { color: var(--teal); font-weight: 500; }
+
   /* ===== Login gate (DW themed) ===== */
   #login-overlay {
     position: fixed; inset: 0; z-index: 2000;
@@ -408,10 +478,15 @@
   #login-card .brand-icon-lg {
     width: 52px; height: 52px;
     border-radius: 13px;
-    background: var(--neon-matrix);
+    background: var(--midnight);
+    border: 1px solid rgba(0,224,255,0.22);
+    display: flex; align-items: center; justify-content: center;
     margin: 0 auto 22px;
-    box-shadow: 0 0 32px rgba(0,224,255,0.3);
+    box-shadow: 0 0 32px rgba(0,224,255,0.22);
+    overflow: hidden;
   }
+  #login-card .brand-icon-lg img { width: 58%; height: 58%; display: block; }
+  #login-card .login-logo { width: 210px; max-width: 82%; height: auto; display: block; margin: 0 auto 20px; }
   #login-card .wordmark {
     font-family: var(--font-display);
     font-size: 26px;
@@ -444,8 +519,7 @@
 <!-- ===================== LOGIN GATE ===================== -->
 <div id="login-overlay">
   <div id="login-card">
-    <div class="brand-icon-lg"></div>
-    <div class="wordmark">Digital <span class="gradient">Wheelhouse</span></div>
+    <img class="login-logo" src="dw-logo-white.svg" alt="Digital Wheelhouse">
     <div class="login-sub">SEO Image Processor · Team Access</div>
     <form id="login-form">
       <input type="password" id="login-password" placeholder="Team password" autocomplete="current-password" autofocus>
@@ -459,11 +533,9 @@
 <div id="app">
 <header>
   <div class="brand-lockup">
-    <div class="brand-icon"></div>
-    <h1>
-      Digital <span class="gradient">Wheelhouse</span>
-      <span class="sub-product">SEO Image Processor</span>
-    </h1>
+    <img class="brand-logo" src="dw-logo-white.svg" alt="Digital Wheelhouse">
+    <span class="brand-divider"></span>
+    <span class="sub-product" style="margin-top:0">SEO Image Processor</span>
   </div>
   <div class="header-right">
     <div class="tag" style="color:var(--teal)">digitalwheelhouse.com</div>
@@ -472,6 +544,22 @@
 </header>
 
 <main>
+
+<div class="explainer">
+  <div class="explainer-label">Why this matters</div>
+  <div class="explainer-grid">
+    <div>
+      <h3>Descriptive filenames get found</h3>
+      <p>Google and Google Images read the filename. <code>rustic-leather-recliner-western.webp</code> tells search engines exactly what the photo is — <code>IMG_4821.jpg</code> tells them nothing. Properly named images are far more likely to surface in search and pull shoppers and readers to your product and blog pages.</p>
+    </div>
+    <div>
+      <h3>Lighter images load faster</h3>
+      <p>Converting to WebP and resizing makes each file ~30% smaller with no visible quality loss. Faster pages mean better Core Web Vitals, higher rankings, and fewer visitors leaving before the page even loads — on product pages and blog posts alike.</p>
+    </div>
+  </div>
+  <div class="explainer-foot"><strong>Run every product photo and blog image through this</strong> before you save and upload it to your website. Clean name in, web-optimized file out.</div>
+</div>
+
 <div class="grid">
 
   <!-- LEFT: CONTROLS -->
@@ -496,7 +584,7 @@
       <input type="text" id="meta-email" value="sales@leatherfurniture.com">
 
       <label>Default Keywords (comma-separated)</label>
-      <textarea id="meta-keywords">leather furniture, premium leather sofa, top grain leather, leather sectional, Leather Showroom</textarea>
+      <textarea id="meta-keywords">leather furniture, premium leather sofa, top grain leather, leather sectional, leather recliner, Leather Showroom</textarea>
     </div>
 
     <div class="panel" style="margin-top:20px">
@@ -512,21 +600,21 @@
     </div>
 
     <div class="panel" style="margin-top:20px">
-      <h2>③ Output Settings (Shopify-optimized)</h2>
+      <h2>③ Output Settings (Web-optimized)</h2>
 
       <label>Format</label>
       <div class="pill-row" id="format-pills">
         <span class="pill active" data-format="webp">WebP (recommended)</span>
         <span class="pill" data-format="jpeg">JPEG</span>
       </div>
-      <div class="hint" style="margin-top:8px">WebP is ~30% smaller than JPEG. Shopify supports both. WebP loads faster → better Core Web Vitals → better SEO.</div>
+      <div class="hint" style="margin-top:8px">WebP is ~30% smaller than JPEG and loads faster → better Core Web Vitals → better SEO. Supported everywhere modern.</div>
 
       <label>Max Dimension (longest side)</label>
       <select id="max-dim">
-        <option value="2048" selected>2048px — Shopify recommended (zoomable)</option>
-        <option value="2400">2400px — High-res hero / PDP</option>
+        <option value="2048" selected>2048px — High-res (zoomable)</option>
+        <option value="2400">2400px — Hero / full-bleed</option>
         <option value="1600">1600px — Standard product</option>
-        <option value="1200">1200px — Collection thumbnails</option>
+        <option value="1200">1200px — Collection / blog thumbnails</option>
         <option value="800">800px — Small / mobile</option>
         <option value="0">Don't resize</option>
       </select>
@@ -544,13 +632,13 @@
 
       <label>Mode</label>
       <select id="rename-mode" onchange="updateRenameUI()">
-        <option value="pattern" selected>Pattern (template)</option>
-        <option value="ai">AI suggests names (uses Claude)</option>
+        <option value="pattern">Pattern (template)</option>
+        <option value="ai" selected>AI suggests names (uses Claude)</option>
         <option value="manual">Manual one-by-one</option>
         <option value="original">Keep original names</option>
       </select>
 
-      <div id="pattern-controls">
+      <div id="pattern-controls" style="display:none">
         <label>Filename Pattern</label>
         <input type="text" id="pattern" value="{base}-{manufacturer}-{color}-{seq}">
         <div class="pattern-help">
@@ -561,23 +649,23 @@
           <code>{date}</code> <code>{brand}</code>
         </div>
 
-        <label>Manufacturer (optional)</label>
-        <input type="text" id="ph-manufacturer" placeholder="omnia, eleanor-rigby, natuzzi-editions...">
+        <label>Manufacturer / Maker (optional)</label>
+        <input type="text" id="ph-manufacturer" placeholder="omnia, natuzzi, american-leather...">
 
-        <label>Color (optional)</label>
-        <input type="text" id="ph-color" placeholder="cognac, sage, espresso...">
+        <label>Color / Finish (optional)</label>
+        <input type="text" id="ph-color" placeholder="cognac, espresso, walnut, tan...">
 
         <label>Style (optional)</label>
-        <input type="text" id="ph-style" placeholder="barrett, joy, karma...">
+        <input type="text" id="ph-style" placeholder="modern, traditional, rustic, mid-century...">
 
         <label>Product Type (optional)</label>
-        <input type="text" id="ph-product" placeholder="sofa, sectional, recliner, loveseat...">
+        <input type="text" id="ph-product" placeholder="sofa, sectional, recliner, loveseat, chair...">
 
         <label>Room (optional)</label>
-        <input type="text" id="ph-room" placeholder="living-room, family-room...">
+        <input type="text" id="ph-room" placeholder="living-room, family-room, den, theater...">
       </div>
 
-      <div id="ai-controls" style="display:none">
+      <div id="ai-controls">
         <div class="notice">
           <div class="notice-label">Secure AI naming</div>
           <p>AI naming examines each image and suggests an SEO-friendly filename. The request runs through this Digital Wheelhouse server, so the Anthropic API key stays server-side — never exposed in the browser.</p>
@@ -586,13 +674,21 @@
         <label>Naming Style</label>
         <select id="ai-style">
           <option value="ecom">Ecom-SEO (e.g. cognac-leather-sectional-with-chaise)</option>
-          <option value="descriptive">Descriptive (e.g. brown-leather-couch-living-room)</option>
+          <option value="descriptive">Descriptive (e.g. brown-leather-recliner-living-room)</option>
           <option value="minimal">Minimal keywords (e.g. leather-sofa-cognac)</option>
         </select>
       </div>
 
       <div id="manual-hint" style="display:none">
         <p class="hint">After uploading, you'll see an input next to each image to type its new name.</p>
+      </div>
+
+      <div id="brand-append-controls">
+        <label>Vendor / Product Brand (optional)</label>
+        <input type="text" id="ai-vendor" placeholder="e.g. Jason Scott Collection" oninput="render()">
+        <div class="hint">When filled, this is appended to each filename — e.g. ...-jason-scott-collection. Set it per batch for whichever vendor you're processing.</div>
+
+        <label class="check-row"><input type="checkbox" id="ai-append-brand" checked onchange="render()"> Also append the store brand (Leather Showroom)</label>
       </div>
     </div>
   </section>
@@ -724,6 +820,7 @@ function updateRenameUI() {
   document.getElementById('pattern-controls').style.display = mode === 'pattern' ? 'block' : 'none';
   document.getElementById('ai-controls').style.display = mode === 'ai' ? 'block' : 'none';
   document.getElementById('manual-hint').style.display = mode === 'manual' ? 'block' : 'none';
+  document.getElementById('brand-append-controls').style.display = (mode === 'ai' || mode === 'manual') ? 'block' : 'none';
   render();
 }
 
@@ -848,10 +945,28 @@ function getBaseName(filename) {
   return filename.replace(/\.[^.]+$/, '');
 }
 
+function appendBrandBits(base) {
+  let out = base;
+  const vendorSlug = slugify(document.getElementById('ai-vendor')?.value || '');
+  if (vendorSlug && !out.includes(vendorSlug)) out = `${out}-${vendorSlug}`;
+  const appendBrand = document.getElementById('ai-append-brand')?.checked;
+  if (appendBrand) {
+    const brandSlug = slugify(document.getElementById('meta-brand').value);
+    if (brandSlug && !out.includes(brandSlug)) out = `${out}-${brandSlug}`;
+  }
+  return out;
+}
+
 function computeNewName(img, idx, mode) {
   if (mode === 'original') return slugify(getBaseName(img.file.name));
-  if (mode === 'manual') return img.customName ? slugify(img.customName) : slugify(getBaseName(img.file.name));
-  if (mode === 'ai') return img.aiSuggested || slugify(getBaseName(img.file.name));
+  if (mode === 'manual') {
+    const base = img.customName ? slugify(img.customName) : slugify(getBaseName(img.file.name));
+    return appendBrandBits(base);
+  }
+  if (mode === 'ai') {
+    const base = img.aiSuggested || slugify(getBaseName(img.file.name));
+    return appendBrandBits(base);
+  }
 
   // pattern
   const pattern = document.getElementById('pattern').value || '{base}-{seq}';
@@ -990,7 +1105,6 @@ async function processAll() {
 
   for (let i = 0; i < images.length; i++) {
     const img = images[i];
-    if (img.status === 'done') continue;
     img.status = 'processing';
     render();
 
