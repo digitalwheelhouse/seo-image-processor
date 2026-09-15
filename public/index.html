@@ -1155,7 +1155,9 @@ async function generateAINames() {
 
       const data = await response.json();
       if (response.ok && data.name) {
-        img.aiSuggested = slugify(data.name);
+        let nm = slugify(data.name);
+        if (nm.split('-').length > 8 || nm.length > 64) nm = slugify(getBaseName(img.file.name));
+        img.aiSuggested = nm;
         img.status = 'ready';
       } else {
         img.status = 'error';
@@ -1197,17 +1199,17 @@ function buildExifBytes(img, idx, finalName) {
 
   const zeroth = {};
   const exif = {};
-  zeroth[piexif.ImageIFD.Artist] = author;
-  zeroth[piexif.ImageIFD.Copyright] = copyright;
-  zeroth[piexif.ImageIFD.ImageDescription] = desc;
-  zeroth[piexif.ImageIFD.Software] = brand + ' SEO Image Processor';
+  zeroth[piexif.ImageIFD.Artist] = asciiSafe(author);
+  zeroth[piexif.ImageIFD.Copyright] = asciiSafe(copyright);
+  zeroth[piexif.ImageIFD.ImageDescription] = asciiSafe(desc);
+  zeroth[piexif.ImageIFD.Software] = asciiSafe(brand + ' SEO Image Processor');
   zeroth[piexif.ImageIFD.XPTitle] = stringToUTF16Bytes(title);
   zeroth[piexif.ImageIFD.XPAuthor] = stringToUTF16Bytes(author);
   zeroth[piexif.ImageIFD.XPComment] = stringToUTF16Bytes(`${url} | ${email}`);
   zeroth[piexif.ImageIFD.XPKeywords] = stringToUTF16Bytes(keywords);
   zeroth[piexif.ImageIFD.XPSubject] = stringToUTF16Bytes(title);
-  zeroth[piexif.ImageIFD.HostComputer] = url;
-  exif[piexif.ExifIFD.UserComment] = `ASCII\0\0\0${copyright} | ${url} | ${title}`;
+  zeroth[piexif.ImageIFD.HostComputer] = asciiSafe(url);
+  exif[piexif.ExifIFD.UserComment] = asciiSafe(`ASCII\0\0\0${copyright} | ${url} | ${title}`);
   exif[piexif.ExifIFD.DateTimeOriginal] = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15).replace('T', ' ');
 
   const exifObj = { '0th': zeroth, Exif: exif };
@@ -1251,10 +1253,15 @@ async function processAll() {
       let finalBlob = blob;
 
       if (mime === 'image/jpeg') {
-        const dataUrl = await blobToDataURL(blob);
-        const exifBytes = buildExifBytes(img, i, finalName);
-        const newDataUrl = piexif.insert(exifBytes, dataUrl);
-        finalBlob = dataURLToBlob(newDataUrl);
+        try {
+          const dataUrl = await blobToDataURL(blob);
+          const exifBytes = buildExifBytes(img, i, finalName);
+          const newDataUrl = piexif.insert(exifBytes, dataUrl);
+          finalBlob = dataURLToBlob(newDataUrl);
+        } catch (metaErr) {
+          console.warn('JPEG metadata embed skipped:', metaErr);
+          finalBlob = blob;
+        }
       } else if (mime === 'image/webp') {
         const xmpPacket = buildXMPPacket(img, i, finalName);
         finalBlob = await injectXMPIntoWebP(blob, xmpPacket);
@@ -1364,6 +1371,18 @@ function buildXMPPacket(img, idx, finalName) {
  </rdf:RDF>
 </x:xmpmeta>
 <?xpacket end="w"?>`;
+}
+
+function asciiSafe(s) {
+  return String(s || '')
+    .replace(/[\u2014\u2013]/g, '-')
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/\u00A9/g, '(c)')
+    .replace(/\u00AE/g, '(r)')
+    .replace(/\u2122/g, '(tm)')
+    .replace(/\u2026/g, '...')
+    .replace(/[^\x00-\x7F]/g, '');
 }
 
 function escapeXML(s) {
