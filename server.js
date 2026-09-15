@@ -1,13 +1,12 @@
 // ============================================================================
-// Leather Showroom — SEO Image Processor (secure team server)
+// Digital Wheelhouse — Internal SEO Image Processor (multi-client studio)
 //
-// What changed vs. the old single-file tool:
-//   - The Anthropic API key NEVER reaches the browser. It lives only in the
-//     server's environment (.env). The browser asks THIS server to name an
-//     image; the server calls Anthropic and returns just the suggested name.
-//   - The whole tool is gated behind a shared team password. Unlocking sets a
-//     signed, httpOnly session cookie — so the password isn't stored in the
-//     browser bundle either.
+//   - The Anthropic API key NEVER reaches the browser (server-side only).
+//   - Gated behind a shared team password (signed httpOnly session cookie).
+//   - Stores CLIENT PROFILES on the server so the whole team shares one list.
+//     Each profile holds a client's Ownership/SEO metadata + per-image content.
+//     Profiles live in a JSON file under DATA_DIR — on Render, point DATA_DIR
+//     at a mounted persistent disk so they survive redeploys.
 // ============================================================================
 
 import express from 'express';
@@ -42,9 +41,9 @@ const {
   SESSION_SECRET,
   ANTHROPIC_MODEL = 'claude-sonnet-4-6',
   PORT = 3000,
+  DATA_DIR,
 } = process.env;
 
-// --- Fail fast on misconfiguration -----------------------------------------
 const missing = [];
 if (!ANTHROPIC_API_KEY) missing.push('ANTHROPIC_API_KEY');
 if (!TEAM_PASSWORD) missing.push('TEAM_PASSWORD');
@@ -57,54 +56,37 @@ if (missing.length) {
 
 const app = express();
 app.disable('x-powered-by');
-app.use(express.json({ limit: '25mb' })); // base64 images can be large
+app.use(express.json({ limit: '25mb' }));
 app.use(cookieParser(SESSION_SECRET));
 
 // ============================================================================
 // AUTH — shared password -> signed session cookie
 // ============================================================================
-
-// Token = base64(payload).hmac  where payload carries an expiry.
-function signToken(ttlMs = 1000 * 60 * 60 * 12) { // 12h sessions
+function signToken(ttlMs = 1000 * 60 * 60 * 12) {
   const payload = Buffer.from(JSON.stringify({ exp: Date.now() + ttlMs })).toString('base64url');
   const sig = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('base64url');
   return `${payload}.${sig}`;
 }
-
 function verifyToken(token) {
   if (!token || typeof token !== 'string' || !token.includes('.')) return false;
   const [payload, sig] = token.split('.');
   const expected = crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('base64url');
-  // constant-time compare
-  const a = Buffer.from(sig);
-  const b = Buffer.from(expected);
+  const a = Buffer.from(sig), b = Buffer.from(expected);
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
   try {
     const { exp } = JSON.parse(Buffer.from(payload, 'base64url').toString());
     return typeof exp === 'number' && exp > Date.now();
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 }
-
-function isAuthed(req) {
-  return verifyToken(req.signedCookies?.session);
-}
-
+function isAuthed(req) { return verifyToken(req.signedCookies?.session); }
 function requireAuth(req, res, next) {
   if (isAuthed(req)) return next();
   res.status(401).json({ error: 'Not authenticated' });
 }
-
-// Constant-time password check
 function passwordMatches(input) {
   const a = Buffer.from(String(input ?? ''));
   const b = Buffer.from(TEAM_PASSWORD);
-  if (a.length !== b.length) {
-    // still do a compare to avoid leaking length via timing
-    crypto.timingSafeEqual(b, b);
-    return false;
-  }
+  if (a.length !== b.length) { crypto.timingSafeEqual(b, b); return false; }
   return crypto.timingSafeEqual(a, b);
 }
 
@@ -121,46 +103,143 @@ app.post('/api/login', (req, res) => {
   });
   res.json({ ok: true });
 });
+app.post('/api/logout', (req, res) => { res.clearCookie('session'); res.json({ ok: true }); });
+app.get('/api/session', (req, res) => { res.json({ authed: isAuthed(req) }); });
 
-app.post('/api/logout', (req, res) => {
-  res.clearCookie('session');
-  res.json({ ok: true });
+// ============================================================================
+// CLIENT PROFILES — stored as JSON on disk (DATA_DIR), shared by the team
+// ============================================================================
+const dataDir = DATA_DIR || path.join(__dirname, 'data');
+fs.mkdirSync(dataDir, { recursive: true });
+const profilesPath = path.join(dataDir, 'profiles.json');
+
+const DEFAULT_PROFILES = {
+  'hill-country-interiors': {
+    id: 'hill-country-interiors', name: 'Hill Country Interiors',
+    brand: 'Hill Country Interiors', url: 'https://hillcountryinteriors.com',
+    copyright: '© 2026 Hill Country Interiors. All rights reserved.',
+    author: 'Hill Country Interiors', email: 'brandon@hillcountryinteriors.com',
+    keywords: 'upscale leather furniture, rustic furniture, Western furniture, old-world furniture, Hill Country Interiors',
+    titleTpl: '{name} | Hill Country Interiors',
+    descTpl: '{name} — from Hill Country Interiors. Upscale leather, rustic, Western, and old-world furniture, made to last.',
+    vendor: '',
+  },
+  'leather-showroom': {
+    id: 'leather-showroom', name: 'Leather Showroom',
+    brand: 'Leather Showroom', url: 'https://leatherfurniture.com',
+    copyright: '© 2026 Leather Showroom. All rights reserved.',
+    author: 'Leather Showroom', email: 'sales@leatherfurniture.com',
+    keywords: 'leather furniture, premium leather sofa, top grain leather, leather sectional, leather recliner, Leather Showroom',
+    titleTpl: '{name} | Premium Leather Furniture | Leather Showroom',
+    descTpl: '{name} — handcrafted premium leather furniture from Leather Showroom. Top-grain leather, made to last.',
+    vendor: '',
+  },
+  'arizona-leather': {
+    id: 'arizona-leather', name: 'Arizona Leather',
+    brand: 'Arizona Leather', url: 'https://arizonaleather.com',
+    copyright: '© 2026 Arizona Leather. All rights reserved.',
+    author: 'Arizona Leather', email: 'jimriedl@arizonaleather.com',
+    keywords: 'leather furniture, leather sofa, leather sectional, leather recliner, top grain leather, Arizona Leather',
+    titleTpl: '{name} | Arizona Leather',
+    descTpl: '{name} — premium leather furniture from Arizona Leather. Leather sofas, sectionals, and recliners, made to last.',
+    vendor: '',
+  },
+  'gratr-landscaping': {
+    id: 'gratr-landscaping', name: 'Gratr Landscaping',
+    brand: 'Gratr Landscaping', url: '', copyright: '© 2026 Gratr Landscaping. All rights reserved.',
+    author: 'Gratr Landscaping', email: '', keywords: '',
+    titleTpl: '{name} | Gratr Landscaping', descTpl: '{name} — from Gratr Landscaping.', vendor: '',
+  },
+  'terra-excavating': {
+    id: 'terra-excavating', name: 'Terra Excavating',
+    brand: 'Terra Excavating', url: '', copyright: '© 2026 Terra Excavating. All rights reserved.',
+    author: 'Terra Excavating', email: '', keywords: '',
+    titleTpl: '{name} | Terra Excavating', descTpl: '{name} — from Terra Excavating.', vendor: '',
+  },
+  '1st-call-plumbing': {
+    id: '1st-call-plumbing', name: '1st Call Plumbing',
+    brand: '1st Call Plumbing', url: '', copyright: '© 2026 1st Call Plumbing. All rights reserved.',
+    author: '1st Call Plumbing', email: '', keywords: '',
+    titleTpl: '{name} | 1st Call Plumbing', descTpl: '{name} — from 1st Call Plumbing.', vendor: '',
+  },
+  'walker-homes-remodeling': {
+    id: 'walker-homes-remodeling', name: 'Walker Homes Remodeling',
+    brand: 'Walker Homes Remodeling', url: '', copyright: '© 2026 Walker Homes Remodeling. All rights reserved.',
+    author: 'Walker Homes Remodeling', email: '', keywords: '',
+    titleTpl: '{name} | Walker Homes Remodeling', descTpl: '{name} — from Walker Homes Remodeling.', vendor: '',
+  },
+  'karen-dietz-interiors': {
+    id: 'karen-dietz-interiors', name: 'Karen Dietz Interiors',
+    brand: 'Karen Dietz Interiors', url: '', copyright: '© 2026 Karen Dietz Interiors. All rights reserved.',
+    author: 'Karen Dietz Interiors', email: '', keywords: '',
+    titleTpl: '{name} | Karen Dietz Interiors', descTpl: '{name} — from Karen Dietz Interiors.', vendor: '',
+  },
+  'southern-tattoo-society': {
+    id: 'southern-tattoo-society', name: 'Southern Tattoo Society',
+    brand: 'Southern Tattoo Society', url: '', copyright: '© 2026 Southern Tattoo Society. All rights reserved.',
+    author: 'Southern Tattoo Society', email: '', keywords: '',
+    titleTpl: '{name} | Southern Tattoo Society', descTpl: '{name} — from Southern Tattoo Society.', vendor: '',
+  },
+};
+
+function readProfiles() {
+  try { return JSON.parse(fs.readFileSync(profilesPath, 'utf8')); }
+  catch { return null; }
+}
+function writeProfiles(obj) {
+  fs.writeFileSync(profilesPath, JSON.stringify(obj, null, 2));
+}
+// Seed defaults on first run (when no profiles file exists yet)
+if (!readProfiles()) writeProfiles(DEFAULT_PROFILES);
+
+const ALLOWED_KEYS = ['name', 'brand', 'url', 'copyright', 'author', 'email', 'keywords', 'titleTpl', 'descTpl', 'vendor'];
+function cleanProfile(body, id) {
+  const out = { id };
+  for (const k of ALLOWED_KEYS) out[k] = typeof body?.[k] === 'string' ? body[k].slice(0, 2000) : '';
+  if (!out.name) out.name = id;
+  return out;
+}
+
+app.get('/api/profiles', requireAuth, (req, res) => {
+  res.json(readProfiles() || {});
 });
-
-app.get('/api/session', (req, res) => {
-  res.json({ authed: isAuthed(req) });
+app.put('/api/profiles/:id', requireAuth, (req, res) => {
+  const id = String(req.params.id).replace(/[^a-z0-9-]/gi, '').slice(0, 100);
+  if (!id) return res.status(400).json({ error: 'Invalid id' });
+  const profiles = readProfiles() || {};
+  profiles[id] = cleanProfile(req.body, id);
+  writeProfiles(profiles);
+  res.json({ ok: true, id, profile: profiles[id] });
+});
+app.delete('/api/profiles/:id', requireAuth, (req, res) => {
+  const id = String(req.params.id);
+  const profiles = readProfiles() || {};
+  delete profiles[id];
+  writeProfiles(profiles);
+  res.json({ ok: true });
 });
 
 // ============================================================================
 // AI NAMING PROXY — the only place the API key is ever used
 // ============================================================================
-
 const STYLE_GUIDES = {
   ecom: 'an ecommerce-SEO filename: lowercase, hyphenated, 4-8 words, keyword-rich (color + material + product type + descriptor)',
   descriptive: 'a descriptive filename: lowercase, hyphenated, 3-6 words, describes what is visually in the image',
   minimal: 'a minimal keyword filename: lowercase, hyphenated, 2-4 words, just the core product keywords',
 };
-
 function slugify(s) {
   return String(s || '').toLowerCase().trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
 }
 
 app.post('/api/suggest-name', requireAuth, async (req, res) => {
   try {
     const { imageBase64, mediaType, style = 'ecom', brand = '' } = req.body || {};
-    if (!imageBase64 || !mediaType) {
-      return res.status(400).json({ error: 'imageBase64 and mediaType are required' });
-    }
+    if (!imageBase64 || !mediaType) return res.status(400).json({ error: 'imageBase64 and mediaType are required' });
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowed.includes(mediaType)) {
-      return res.status(400).json({ error: `Unsupported media type: ${mediaType}` });
-    }
+    if (!allowed.includes(mediaType)) return res.status(400).json({ error: `Unsupported media type: ${mediaType}` });
     const styleGuide = STYLE_GUIDES[style] || STYLE_GUIDES.ecom;
-    const brandName = String(brand).slice(0, 120) || 'the brand';
+    const brandName = String(brand).slice(0, 120) || 'this brand';
 
     const apiRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -176,7 +255,7 @@ app.post('/api/suggest-name', requireAuth, async (req, res) => {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
-            { type: 'text', text: `Look at this product image for ${brandName} (a premium leather furniture retailer). Return ONLY ${styleGuide}. No quotes, no extension, no explanation. Just the filename slug. Example output: cognac-leather-sectional-with-chaise` },
+            { type: 'text', text: `Look at this product image for ${brandName}. Return ONLY ${styleGuide}. No quotes, no extension, no explanation. Just the filename slug. Example output: cognac-leather-sectional-with-chaise` },
           ],
         }],
       }),
@@ -187,10 +266,8 @@ app.post('/api/suggest-name', requireAuth, async (req, res) => {
       console.error('Anthropic API error', apiRes.status, detail.slice(0, 500));
       return res.status(502).json({ error: `Anthropic API returned ${apiRes.status}` });
     }
-
     const data = await apiRes.json();
-    const text = data?.content?.[0]?.text || '';
-    const name = slugify(text);
+    const name = slugify(data?.content?.[0]?.text || '');
     if (!name) return res.status(502).json({ error: 'Model returned an empty name' });
     res.json({ name });
   } catch (e) {
@@ -200,11 +277,11 @@ app.post('/api/suggest-name', requireAuth, async (req, res) => {
 });
 
 // ============================================================================
-// STATIC FILES — the browser tool itself
+// STATIC FILES
 // ============================================================================
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.listen(PORT, () => {
-  console.log(`\n  SEO Image Processor running on http://localhost:${PORT}`);
-  console.log(`  Model: ${ANTHROPIC_MODEL}  ·  Sessions: 12h  ·  Key: server-side only\n`);
+  console.log(`\n  DW Studio SEO Image Processor on http://localhost:${PORT}`);
+  console.log(`  Profiles: ${profilesPath}  ·  Model: ${ANTHROPIC_MODEL}\n`);
 });
