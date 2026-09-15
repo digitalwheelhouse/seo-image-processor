@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Digital Wheelhouse — SEO Image Processor · Leather Showroom</title>
+<title>Digital Wheelhouse — SEO Image Processor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -566,25 +566,43 @@
   <section>
 
     <div class="panel">
+      <h2>⓪ Client / Project</h2>
+      <p class="hint" style="margin-top:-8px">Switch clients to load their saved brand &amp; SEO info. Stored on the server — your whole team shares the same list.</p>
+      <label>Active Client</label>
+      <select id="client-select" onchange="selectProfile(this.value)"></select>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" onclick="saveCurrentProfile()">Save to this client</button>
+        <button class="ghost" onclick="newClient()">+ New client</button>
+        <button class="ghost" onclick="deleteClient()">Delete</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="ghost small" onclick="exportProfiles()">⭳ Export backup</button>
+        <button class="ghost small" onclick="document.getElementById('import-file').click()">⭱ Import backup</button>
+        <input type="file" id="import-file" accept="application/json" style="display:none" onchange="importProfiles(this.files[0])">
+      </div>
+      <div class="hint" id="profile-status" style="margin-top:10px"></div>
+    </div>
+
+    <div class="panel">
       <h2>① Ownership &amp; SEO Metadata</h2>
 
       <label>Brand / Company</label>
-      <input type="text" id="meta-brand" value="Leather Showroom">
+      <input type="text" id="meta-brand" value="">
 
       <label>Website URL</label>
-      <input type="url" id="meta-url" value="https://leatherfurniture.com">
+      <input type="url" id="meta-url" value="">
 
       <label>Copyright Notice</label>
-      <input type="text" id="meta-copyright" value="© 2026 Leather Showroom. All rights reserved.">
+      <input type="text" id="meta-copyright" value="">
 
       <label>Author / Creator</label>
-      <input type="text" id="meta-author" value="Leather Showroom">
+      <input type="text" id="meta-author" value="">
 
       <label>Contact Email</label>
-      <input type="text" id="meta-email" value="sales@leatherfurniture.com">
+      <input type="text" id="meta-email" value="">
 
       <label>Default Keywords (comma-separated)</label>
-      <textarea id="meta-keywords">leather furniture, premium leather sofa, top grain leather, leather sectional, leather recliner, Leather Showroom</textarea>
+      <textarea id="meta-keywords"></textarea>
     </div>
 
     <div class="panel" style="margin-top:20px">
@@ -592,10 +610,10 @@
       <p class="hint" style="margin-top:-8px">These get embedded individually. Use placeholders to auto-fill from filename.</p>
 
       <label>Title Template</label>
-      <input type="text" id="meta-title-tpl" value="{name} | Premium Leather Furniture | Leather Showroom">
+      <input type="text" id="meta-title-tpl" value="">
 
       <label>Description / Alt-Text Template</label>
-      <textarea id="meta-desc-tpl">{name} — handcrafted premium leather furniture from Leather Showroom. Top-grain leather, made to last.</textarea>
+      <textarea id="meta-desc-tpl"></textarea>
       <div class="pattern-help">Placeholders: <code>{name}</code> <code>{brand}</code> <code>{date}</code> <code>{index}</code></div>
     </div>
 
@@ -650,19 +668,19 @@
         </div>
 
         <label>Manufacturer / Maker (optional)</label>
-        <input type="text" id="ph-manufacturer" placeholder="omnia, natuzzi, american-leather...">
+        <input type="text" id="ph-manufacturer" placeholder="maker or collection name...">
 
         <label>Color / Finish (optional)</label>
         <input type="text" id="ph-color" placeholder="cognac, espresso, walnut, tan...">
 
         <label>Style (optional)</label>
-        <input type="text" id="ph-style" placeholder="modern, traditional, rustic, mid-century...">
+        <input type="text" id="ph-style" placeholder="rustic, western, old-world, upscale-leather...">
 
         <label>Product Type (optional)</label>
-        <input type="text" id="ph-product" placeholder="sofa, sectional, recliner, loveseat, chair...">
+        <input type="text" id="ph-product" placeholder="sofa, recliner, dining-table, console, bed...">
 
         <label>Room (optional)</label>
-        <input type="text" id="ph-room" placeholder="living-room, family-room, den, theater...">
+        <input type="text" id="ph-room" placeholder="living-room, dining-room, bedroom, lodge...">
       </div>
 
       <div id="ai-controls">
@@ -673,9 +691,9 @@
 
         <label>Naming Style</label>
         <select id="ai-style">
-          <option value="ecom">Ecom-SEO (e.g. cognac-leather-sectional-with-chaise)</option>
-          <option value="descriptive">Descriptive (e.g. brown-leather-recliner-living-room)</option>
-          <option value="minimal">Minimal keywords (e.g. leather-sofa-cognac)</option>
+          <option value="ecom">Ecom-SEO (e.g. rustic-leather-recliner-western-lodge)</option>
+          <option value="descriptive">Descriptive (e.g. distressed-oak-dining-table-old-world)</option>
+          <option value="minimal">Minimal keywords (e.g. western-leather-sofa)</option>
         </select>
       </div>
 
@@ -688,7 +706,7 @@
         <input type="text" id="ai-vendor" placeholder="e.g. Jason Scott Collection" oninput="render()">
         <div class="hint">When filled, this is appended to each filename — e.g. ...-jason-scott-collection. Set it per batch for whichever vendor you're processing.</div>
 
-        <label class="check-row"><input type="checkbox" id="ai-append-brand" checked onchange="render()"> Also append the store brand (Leather Showroom)</label>
+        <label class="check-row"><input type="checkbox" id="ai-append-brand" checked onchange="render()"> Also append the store brand (Hill Country Interiors)</label>
       </div>
     </div>
   </section>
@@ -739,6 +757,7 @@ const loginError = document.getElementById('login-error');
 function showApp() {
   loginOverlay.style.display = 'none';
   appEl.style.display = 'block';
+  loadProfiles();
 }
 function showLogin() {
   loginOverlay.style.display = 'flex';
@@ -785,6 +804,122 @@ async function logout() {
 }
 
 checkSession();
+
+// ============ CLIENT PROFILES (server-synced) ============
+let profiles = {};
+let currentProfileId = null;
+const PROFILE_FIELDS = { brand:'meta-brand', url:'meta-url', copyright:'meta-copyright', author:'meta-author', email:'meta-email', keywords:'meta-keywords', titleTpl:'meta-title-tpl', descTpl:'meta-desc-tpl', vendor:'ai-vendor' };
+
+async function loadProfiles() {
+  try {
+    const r = await fetch('/api/profiles', { credentials: 'same-origin' });
+    if (!r.ok) return;
+    profiles = await r.json();
+  } catch { profiles = {}; }
+  renderProfileSelect();
+  const ids = Object.keys(profiles);
+  if (ids.length) selectProfile((currentProfileId && profiles[currentProfileId]) ? currentProfileId : ids[0]);
+}
+
+function renderProfileSelect() {
+  const sel = document.getElementById('client-select');
+  if (!sel) return;
+  const ids = Object.keys(profiles).sort((a,b)=>(profiles[a].name||'').localeCompare(profiles[b].name||''));
+  sel.innerHTML = ids.length ? ids.map(id=>`<option value="${id}">${profiles[id].name||id}</option>`).join('') : '<option value="">No clients yet — click + New client</option>';
+  if (currentProfileId) sel.value = currentProfileId;
+}
+
+function selectProfile(id) {
+  if (!profiles[id]) return;
+  currentProfileId = id;
+  const sel = document.getElementById('client-select'); if (sel) sel.value = id;
+  const p = profiles[id];
+  for (const [k, elId] of Object.entries(PROFILE_FIELDS)) { const el=document.getElementById(elId); if (el) el.value = p[k] || ''; }
+  setProfileStatus('Loaded "' + (p.name||id) + '". Edit fields, then Save to this client to update.');
+  render();
+}
+
+function gatherProfile(name) {
+  const obj = { name };
+  for (const [k, elId] of Object.entries(PROFILE_FIELDS)) { const el=document.getElementById(elId); obj[k] = el ? el.value : ''; }
+  return obj;
+}
+
+async function putProfile(id, body) {
+  const r = await fetch('/api/profiles/' + encodeURIComponent(id), { method:'PUT', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify(body) });
+  if (r.status === 401) { showToast('Session expired — log in again'); showLogin(); return false; }
+  return r.ok;
+}
+
+async function saveCurrentProfile() {
+  if (!currentProfileId) return newClient();
+  const name = (profiles[currentProfileId] && profiles[currentProfileId].name) || currentProfileId;
+  const body = gatherProfile(name);
+  if (await putProfile(currentProfileId, body)) {
+    profiles[currentProfileId] = Object.assign({}, body, { id: currentProfileId });
+    setProfileStatus('Saved "' + name + '".'); showToast('Saved ' + name);
+  } else setProfileStatus('Could not save — check your connection.');
+}
+
+async function newClient() {
+  const name = (prompt('New client name (e.g. Acme Furniture):') || '').trim();
+  if (!name) return;
+  const id = slugify(name) || ('client-' + Date.now());
+  if (profiles[id] && !confirm('A client named "' + name + '" already exists. Overwrite it?')) return;
+  const body = gatherProfile(name);
+  body.brand = name; body.author = name;
+  body.copyright = '© ' + new Date().getFullYear() + ' ' + name + '. All rights reserved.';
+  body.titleTpl = '{name} | ' + name;
+  body.descTpl = '{name} — from ' + name + '.';
+  body.keywords = ''; body.url = ''; body.email = ''; body.vendor = '';
+  if (await putProfile(id, body)) {
+    profiles[id] = Object.assign({}, body, { id });
+    currentProfileId = id; renderProfileSelect(); selectProfile(id);
+    showToast('Created ' + name); setProfileStatus('Created "' + name + '". Fill in its URL, email, and keywords, then Save.');
+  }
+}
+
+async function deleteClient() {
+  if (!currentProfileId) return;
+  const name = (profiles[currentProfileId] && profiles[currentProfileId].name) || currentProfileId;
+  if (!confirm('Delete client "' + name + '"? This removes its saved brand & SEO info for everyone.')) return;
+  const r = await fetch('/api/profiles/' + encodeURIComponent(currentProfileId), { method:'DELETE', credentials:'same-origin' });
+  if (r.status === 401) { showLogin(); return; }
+  delete profiles[currentProfileId]; currentProfileId = null;
+  const ids = Object.keys(profiles); renderProfileSelect();
+  if (ids.length) selectProfile(ids[0]); else { for (const elId of Object.values(PROFILE_FIELDS)){const el=document.getElementById(elId); if(el) el.value='';} render(); }
+  showToast('Deleted ' + name);
+}
+
+function exportProfiles() {
+  const blob = new Blob([JSON.stringify(profiles, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = `dw-clients-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  showToast('Client list exported');
+}
+
+async function importProfiles(file) {
+  if (!file) return;
+  let data;
+  try { data = JSON.parse(await file.text()); } catch { showToast('Not a valid backup file'); return; }
+  const entries = Array.isArray(data) ? data : Object.values(data);
+  let n = 0;
+  for (const p of entries) {
+    const id = slugify(p.id || p.name || '');
+    if (!id) continue;
+    if (await putProfile(id, p)) { profiles[id] = Object.assign({}, p, { id }); n++; }
+  }
+  renderProfileSelect();
+  const ids = Object.keys(profiles);
+  if (ids.length) selectProfile((currentProfileId && profiles[currentProfileId]) ? currentProfileId : ids[0]);
+  document.getElementById('import-file').value = '';
+  showToast('Imported ' + n + ' client' + (n===1?'':'s'));
+}
+
+function setProfileStatus(msg){ const el=document.getElementById('profile-status'); if(el) el.textContent=msg; }
 
 // ============ STATE ============
 let images = []; // {id, file, dataUrl, width, height, status, newName, customName, aiSuggested, processedBlob, processedSize}
@@ -1334,7 +1469,8 @@ async function downloadAsZip() {
 
   const zip = makeZip(files);
   const ts = new Date().toISOString().slice(0, 10);
-  downloadBlob(zip, `leather-showroom-images-${ts}.zip`);
+  const zipBrand = slugify(document.getElementById('meta-brand').value) || 'client';
+  downloadBlob(zip, `${zipBrand}-images-${ts}.zip`);
   showToast(`Downloaded ${done.length} processed images as ZIP`);
 }
 
